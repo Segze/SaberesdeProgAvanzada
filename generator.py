@@ -1,10 +1,13 @@
+# Para descargar la pagina
 import urllib.request
+# Para sacar el texto de la pagina (ya deja todo bien ordenado en un diccionario)
 from bs4 import BeautifulSoup
-#import requests
 
-import csv
+# Para la grafica
 import matplotlib.pyplot as plt
+
 import os
+# Modulo propio donde se procesa todo lo del drive
 import drive
 
 #Aqui se definen las letras del abecedario, la ventaja es que se le pueden añadir simbolos y otras letras como la ñ
@@ -47,24 +50,29 @@ def parsePage(url):
     dns = ""
     if len(h) == 3: dns = host.split(".")[1]
     elif len(h) < 3: dns = host.split(".")[0]
-    # BeautifulSoup procesa el HTML incluyendo etiquetas y el texto que contienen
+    filename = dns
+    # BeautifulSoup procesa el HTML incluyendo etiquetas y el texto que contienen y crea un objeto con toda la info
     soup =  BeautifulSoup(page,features="html.parser")
-    #Debug: Aqui se guarda todo el texto de la pagina
-    with open(f"{dns}.txt","wb") as f: 
+    i=0
+    while (os.path.exists(f"./{filename}.csv")):
+        filename = f"{dns} ({i})"
+        i+=1
+    #Aqui se guarda todo el texto de la pagina
+    allText = ""
+    with open(f"{filename}.txt","wb") as f: 
         for string in soup.strings:
             txt = string
             #print(txt)
             #Guardar texto plano
             f.write(txt.encode('utf8'))
-    allText = ""
-    with open(f"{dns}.txt","rb") as f:
+    with open(f"{filename}.txt","rb") as f:
         #Leer todo el texto de nuevo
         allText = f.read().decode("utf8")
     #contar las letras
-    #Mayusculas
+    #Pasar todo a mayusculas
     allText = allText.upper()
     count = []
-    #Estos son los heders del archivo .csv que se va a generar
+    #Estos son los headers del archivo .csv que se va a generar
     headers = ["Letra","Frecuencia"]
     #Iterar las letras del abecedario
     for letra in abecedario:
@@ -74,19 +82,19 @@ def parsePage(url):
         #Esta va a ser la siguiente columna del archivo csv
         row = [letra,conteo]
         #Guardar el csv con el nombre de la pagina
-        saveCsv(row,headers,f"{dns}")
+        saveCsv(row,headers,f"{filename}")
 
     #Hacer la grafica de barras con los datos contenidos en count, barras cafes y anchura de 0.4
     plt.bar(abecedario,count, color ='maroon',width = 0.4)
     #Titulo del grafico
     plt.title(f"Frecuencia de letras de {host}")
     #Guardar el grafico como png
-    plt.savefig(f'{dns}.png')
+    plt.savefig(f'{filename}.png')
     #Guardar todo en el drive
-    drive.saveDrive(f"{dns}.csv","Saberes Previos",f"{dns}.csv")
-    drive.saveDrive(f'{dns}.png',"Saberes Previos",f'{dns}.png')
+    drive.saveDrive(f"{filename}.csv","Saberes Previos",f"{filename}.csv")
+    drive.saveDrive(f'{filename}.png',"Saberes Previos",f'{filename}.png')
     print ("Listo :>")
-    return dns
+    return filename
     #print ("Pongame 10 porfa >;")
 
 #Funcion que guarda los datos en un nuevo csv
@@ -94,14 +102,18 @@ def saveCsv(freq: list,headers: list, file: str):
     # Si no existe el archivo
     if (not os.path.exists(f"./{file}.csv")):
         #Crear uno nuevo
-        with open(f"{file}.csv", 'w', newline='\n') as csvfile:
+        with open(f"{file}.csv", 'w') as csvfile:
             #Agregar los headers
-            writer = csv.writer(csvfile, delimiter=',',
-                                    quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(headers)
+            txt = ""
+            for header in headers:
+                txt += header + ","
+            #Para quitar la ultima ,
+            csvfile.write(txt[:-1] + "\n")
     #Si ya existe el archivo
-    with open(f"{file}.csv", 'a', newline='\n') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',',
-                                    quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    with open(f"{file}.csv", 'a') as csvfile:
+        txt = ""
+        letra, conteo = freq
+        txt = f"{letra},{conteo}"
         #Solo guardar la columna
-        writer.writerow(freq)
+        csvfile.write(txt+'\n')
+

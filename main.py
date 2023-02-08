@@ -1,4 +1,7 @@
+# Aqui empieza la aplicacion
+
 import PySimpleGUI as sg
+# modulo donde se hace todo el procesamiento
 import generator
 URL = ""
 

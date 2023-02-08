@@ -28,6 +28,7 @@ def OAuth():
             creds.refresh(Request())
         else:
             # Abre una pestaña para que el usuario ingrese (solo cuentas autorizados pueden ingresar a aplicaciones que no estan verificadas)
+            # Aqui se lee el archivo super-screto de credentials.json (que ya subi al github XD )
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
